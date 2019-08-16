@@ -1,0 +1,80 @@
+
+---
+- name: insatll mysql and database
+  hosts: webgroup
+  become: yes
+
+  vars:
+          db_name: accounts
+          db_user: admin
+          db_pass: admin123
+
+
+  tasks:
+
+          - name: checking the connection
+            ping:
+
+          - name: mysql installation
+            apt: name=mysql-server  state=present
+
+          - name: mysql is running
+            service: name=mysql state=started enabled=yes
+
+          - name: mysql installation
+            apt: name=mysql-client  state=present
+
+          - name: mysql is running
+            service: name=mysql state=started enabled=yes
+
+          - name: mysql-python installation
+            apt: name=python-mysqldb state=present
+
+          - name: mysql python start
+            service: name=mysql state=started enabled=yes
+- name: creating database
+            mysql_db:
+                name: "{{db_name}}"
+                state: present
+
+          - name: creating user and password
+            mysql_user:
+                name: "{{db_user}}"
+                password: "{{db_pass}}"
+                priv: "*.*:all"
+                host: '%'
+
+          - name: mysql bind
+            lineinfile:
+                path: /etc/mysql/mysql.conf.d/mysqld.cnf
+                regexp: '^bind-address'
+                line: 'bind-address = 0.0.0.0'
+            notify:
+                - Restart mysql
+
+
+          - name: copy accounts db file to target
+            copy:
+                src: /root/apache-tomcat-8.5.43/webapps/vprofile-v1/WEB-INF/classes/accountsdb.sql
+                dest: /root
+                remote_src: yes
+          - name: deploy accounts db file to database
+            mysql_db:
+                name: "{{db_name}}"
+                login_user: "{{db_user}}"
+                login_password: "{{db_pass}}"
+                state: import
+                target: /root/accountsdb.sql
+            notify:
+                - Restart mysql
+
+  handlers:
+  - name: Restart mysql
+    service:
+      name: mysql
+      state: restarted
+                      
+
+
+
+

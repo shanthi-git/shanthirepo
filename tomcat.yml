@@ -1,0 +1,51 @@
+---
+- name: how to install tomcat
+  hosts: webgroup
+  become: yes
+
+  tasks:
+
+          - name: ping
+            ping:
+
+          - name: install tar
+            apt: name=tar state=present
+
+          - name: install unzip
+            apt: name=unzip state=present
+
+          - name: update
+            shell: apt update
+
+
+          - name: install java
+            apt: name=openjdk-8-jdk state=present
+
+          - name: install tomcat url
+            get_url: url=http://apachemirror.wuchna.com/tomcat/tomcat-8/v8.5.43/bin/apache-tomcat-8.5.43.tar.gz dest=/root
+
+          - name: tomcat unarchieve
+            unarchive:
+                    remote_src: yes
+                    src: /root/apache-tomcat-8.5.43.tar.gz
+                    dest: /root
+
+          - name: deploy war file
+            copy:
+                    src: /VProfile/target/vprofile-v1.war
+
+                    dest: /root/apache-tomcat-8.5.43/webapps
+
+          - name: copy application properties file
+            template:
+                    src: /application.j2
+                    dest: /root/apache-tomcat-8.5.43/webapps/vprofile-v1/WEB-INF/classes/application.properties
+
+
+
+
+          - name: tomcat start
+            command: nohup /root/apache-tomcat-8.5.43/bin/startup.sh
+
+
+

@@ -1,0 +1,48 @@
+---
+- name: how to install nginx
+  hosts: webgroup
+  become: yes
+  order: shuffle
+
+  tasks:
+          - name: check the connection
+            ping:
+
+          - name: install nginx
+            apt: name=nginx state=latest
+
+          - name: nginx start
+            service: name=nginx state=started enabled=yes
+
+          - name: delete the default file in sites available
+            file:
+                    path: /etc/nginx/sites-available/default
+                    state: absent
+
+
+          - name: delete the default file in sites enabled
+            file:
+                    path: /etc/nginx/sites-enabled/default
+                    state: absent
+
+
+          - name: copy vproapp to sites available
+            copy:
+               src: /etc/nginx/sites-available/vproapp
+               dest: /etc/nginx/sites-available/vproapp
+
+          - name: create soft link
+            file:
+               src: /etc/nginx/sites-available/vproapp
+               dest: /etc/nginx/sites-enabled/vproapp
+               state: link
+
+            notify: restart nginx
+
+  handlers:
+          - name: restart nginx
+            service: name=nginx state=restarted
+                                                                                                                            44,1          Bot
+
+
+
